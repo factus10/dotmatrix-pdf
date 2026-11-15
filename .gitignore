@@ -1,0 +1,10 @@
+# Template backups (git history replaces them)
+*.bak-*
+
+# A real manual transcription kept locally, not part of the tool
+clone.md
+clone.pdf
+
+# Okifake render cache
+.okimate-cache/
+.DS_Store
