@@ -14,7 +14,8 @@
 # Requirements:
 #   - pandoc (>= 2.0)
 #   - xelatex (TeX Live or MacTeX)
-#   - DotMatrix font family in ~/Library/Fonts/
+#   - DotMatrix font family (DotMatrix-*.otf) in ~/Library/Fonts, /Library/Fonts,
+#     ~/.local/share/fonts or ~/.fonts -- or set DOTMATRIX_FONTS to its folder
 #
 # Supported YAML front matter fields:
 #   title:          Cover title (spaced letters look best, e.g. "M Y  T I T L E")
@@ -73,6 +74,19 @@ if [ ! -f "$TEMPLATE" ]; then
     exit 1
 fi
 
+# Find the folder holding the DotMatrix fonts (the template loads them by file)
+FONT_DIR=""
+for d in "${DOTMATRIX_FONTS:-}" "$HOME/Library/Fonts" "/Library/Fonts" \
+         "$HOME/.local/share/fonts" "$HOME/.fonts" "/usr/share/fonts" "/usr/local/share/fonts"; do
+    [ -n "$d" ] && [ -d "$d" ] || continue
+    f=$(find "$d" -name "DotMatrix-Regular.otf" -print -quit 2>/dev/null)
+    if [ -n "$f" ]; then FONT_DIR="$(dirname "$f")/"; break; fi
+done
+if [ -z "$FONT_DIR" ]; then
+    echo "Error: DotMatrix fonts not found (DotMatrix-Regular.otf). Install them or set DOTMATRIX_FONTS."
+    exit 1
+fi
+
 OKIFAKE_HOME="${OKIFAKE_HOME:-$HOME/Documents/github/okifake}"
 OKIMATE_FILTER="$OKIFAKE_HOME/integrations/pandoc/okimate.lua"
 FILTER_ARGS=()
@@ -87,6 +101,7 @@ pandoc "$INPUT" \
     --pdf-engine=xelatex \
     --template="$TEMPLATE" \
     --number-sections \
+    -V fontpath="$FONT_DIR" \
     ${FILTER_ARGS[@]+"${FILTER_ARGS[@]}"} \
     -o "$OUTPUT"
 
